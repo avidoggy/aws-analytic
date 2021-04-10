@@ -1,0 +1,23 @@
+Name: nyc-tlc-fhvhv-job
+Role: arn:aws:iam::727247251057:role/service-role/AWSGlueServiceRole-NycTlc-TripData
+Command:
+  Name: glueetl
+  PythonVersion: '3'
+  ScriptLocation: s3://aws-glue-scripts-727247251057-us-east-1/gavin.lin/nyc-tlc-fhvhv-job.py
+Connections:
+  Connections:
+  - s3
+DefaultArguments:
+  --TempDir: s3://aws-glue-temporary-727247251057-us-east-1/gavin.lin
+  --enable-metrics: ''
+  --enable-spark-ui: 'true'
+  --job-bookmark-option: job-bookmark-disable
+  --job-language: python
+  --spark-event-logs-path: s3://aws-glue-temporary-727247251057-us-east-1/gavin.lin/nyc-tlc-fhvhv-job/
+ExecutionProperty:
+  MaxConcurrentRuns: 1
+GlueVersion: '2.0'
+MaxRetries: 0
+WorkerType: Standard
+NumberOfWorkers: 10
+Timeout: 2880
