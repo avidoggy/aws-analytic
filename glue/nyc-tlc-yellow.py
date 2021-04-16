@@ -4,15 +4,15 @@ import sys
 
 # AWS GLUE
 from awsglue.context import GlueContext
-from awsglue.dynamicframe import DynamicFrame
 from awsglue.job import Job
 from awsglue.transforms import *
 from awsglue.utils import getResolvedOptions
 # pyspark
 from pyspark.context import SparkContext
-from pyspark.sql.functions import col, lit, udf, unix_timestamp
+from pyspark.sql.functions import col, lit, udf
 from pyspark.sql.types import (BooleanType, DoubleType, FloatType, IntegerType,
-                               StringType, TimestampType, StructType, StructField)
+                               StringType, StructField, StructType,
+                               TimestampType)
 from pyspark.sql.utils import AnalysisException
 
 args = getResolvedOptions(
@@ -56,7 +56,8 @@ column_mapping = {
     'rate_code': 'ratecode_id',
     'rate_code': 'ratecode_id',
 
-    'store_and_fwd_flag': 'store_and_forward',
+    'store_and_forward': 'store_and_forward_flag',
+    'store_and_fwd_flag': 'store_and_forward_flag',
 
     'fare_amt': 'fare_amount',
     'tip_amt': 'tip_amount',
@@ -76,7 +77,7 @@ schema = StructType([
     StructField('ratecode_id', IntegerType(), False),
     StructField('pickup_location_id', IntegerType(), False),
     StructField('dropoff_location_id', IntegerType(), False),
-    StructField('store_and_fwd_flag', BooleanType(), False),
+    StructField('store_and_forward_flag', BooleanType(), False),
     StructField('dropoff_latitude', DoubleType(), False),
     StructField('dropoff_longitude', DoubleType(), False),
     StructField('payment_type', IntegerType(), False),
@@ -93,11 +94,11 @@ schema = StructType([
 def payment_type_f(v):
     if v is not None:
         mapping = {
-            'csh': 2,
-            'dis': 4,
             'crd': 1,
-            'unk': 5,
+            'csh': 2,
             'noc': 3,
+            'dis': 4,
+            'unk': 5,
             'credit card': 1,
             'credit': 1,
             'cash': 2,
@@ -116,76 +117,88 @@ def payment_type_f(v):
 
 udf_payment_type = udf(f=payment_type_f, returnType=IntegerType())
 
-years = range(2009, 2010)
+years = range(2009, 2021)
 months = range(1, 13)
-months = [2, 5, 8, 11]
+# months = [2, 5, 8, 11]
 for year, month in itertools.product(years, months):
     print(f'Reading from {source_path.format(dataset=dataset_name, year=year, month=month)}')
+
     try:
+        # Reading CSV but not infer schema
         raw = spark.read.csv(
             path=source_path.format(
                 dataset=dataset_name,
                 year=year, month=month
             ),
             header=True, enforceSchema=False, inferSchema=False,
-            ignoreLeadingWhiteSpace=True,
-            ignoreTrailingWhiteSpace=True,
+            ignoreLeadingWhiteSpace=True, ignoreTrailingWhiteSpace=True,
         )
     except AnalysisException as e:
+        # For handling path is not existed
         print('AnalysisException', e)
         continue
-    # raw.printSchema()
+
     # print("1===========")
+    # raw.printSchema()
     # raw.show(vertical=True, n=1)
-    
+
+    # Normalizing column names
     df = raw
     for column in df.columns:
         new_column = column.lower()
         new_column = column_mapping[new_column] if new_column in column_mapping else new_column
         df = df.withColumnRenamed(column, new_column)
 
+    # Add partition columns
     df = df.withColumn('year', lit(year).astype(IntegerType()))
     df = df.withColumn('month', lit(month).astype(IntegerType()))
 
+    # print("2===========")
     # df.printSchema()
-    print("2===========")
-    df.show(vertical=True, n=1)
+    # df.show(vertical=True, n=1)
 
+    ##################
+    # Data cleansing #
+    ##################
+
+    # transfor payment_type
     df = df.withColumn(
         'processed_payment_type',
         udf_payment_type(col('payment_type')).astype(IntegerType())
     )
 
+    # For validating invalid payment_type
     df.select('payment_type', 'processed_payment_type')\
         .filter('processed_payment_type = -1')\
         .repartition(1)\
         .write.csv(
             path=check_path.format(
-                dataset=dataset_name,
+                dataset=dataset_name, year=year, month=month,
                 column='payment_type',
-                year=year,
-                month=month,
             ),
             mode='overwrite',
             header=True,
         )
-
     df = df.drop('payment_type').withColumnRenamed('processed_payment_type', 'payment_type')
 
+    # # Data cleansing: changing column types
     for field in schema.fields:
         if field.name in df.columns:
             df = df.withColumn(field.name, col(field.name).cast(field.dataType))
         else:
             df = df.withColumn(field.name, lit(None).cast(field.dataType))
-    
-    print('3==========================')
-    df.show(vertical=True, n=1)
 
+    # print('3==========================')
+    # df.printSchema()
+    # df.show(vertical=True, n=1)
+
+    # Data cleansing: removing invalid rows
+    # Data cleansing: add calculated columns
     df.createOrReplaceTempView('data')
     df = spark.sql('''
         SELECT
             *,
-            unix_timestamp(dropoff_datetime) - unix_timestamp(pickup_datetime) AS trip_in_seconds
+            UNIX_TIMESTAMP(dropoff_datetime) - UNIX_TIMESTAMP(pickup_datetime) AS trip_in_seconds
         FROM data
         WHERE pickup_datetime IS NOT NULL
         AND dropoff_datetime IS NOT NULL
@@ -195,8 +208,9 @@ for year, month in itertools.product(years, months):
         AND total_amount > 0
     ''')
 
-    print('4==========================')
-    df.show(vertical=True, n=1)
+    # print('4==========================')
+    # df.printSchema()
+    # df.show(vertical=True, n=1)
 
     print(f'Writing to {destination_path.format(dataset=dataset_name)}')
     df.write.parquet(
