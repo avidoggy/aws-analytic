@@ -18,3 +18,7 @@ aws s3 cp nyc-tlc-green.py s3://${SCRIPT_BUCKET}/${SCRIPT_KEY_PREFIX}/nyc-tlc-gr
 echo "aws s3 cp nyc-tlc-yellow.py s3://${SCRIPT_BUCKET}/${SCRIPT_KEY_PREFIX}/nyc-tlc-yellow-job.py"
 aws s3 cp nyc-tlc-yellow.py s3://${SCRIPT_BUCKET}/${SCRIPT_KEY_PREFIX}/nyc-tlc-yellow-job.py
 aws glue create-job --cli-input-yaml file://nyc-tlc-yellow-job.yaml
+
+echo "aws s3 cp nyctlc-yellow-datamart.py s3://${SCRIPT_BUCKET}/${SCRIPT_KEY_PREFIX}/nyctlc-yellow-datamart-job.py"
+aws s3 cp nyctlc-yellow-datamart.py s3://${SCRIPT_BUCKET}/${SCRIPT_KEY_PREFIX}/nyctlc-yellow-datamart-job.py
+aws glue create-job --cli-input-yaml file://nyctlc-yellow-datamart-job.yaml
