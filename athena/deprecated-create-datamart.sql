@@ -1,3 +1,6 @@
+-- Using CTAS and INSERT INTO to Create a Table with More Than 100 Partitions
+-- https://docs.aws.amazon.com/athena/latest/ug/ctas-insert-into.html
+-----------------------------------------------------------------------------
 CREATE TABLE datamart WITH (
     external_location= 's3://gavin-data-lake/nyctlc-datamart/',
     format = 'PARQUET', parquet_compression = 'SNAPPY',
