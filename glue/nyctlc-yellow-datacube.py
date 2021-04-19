@@ -28,7 +28,7 @@ dataset = 'yellow'
 base_path = f's3a://gavin-data-lake/nyc-tlc/trip-data/{dataset}/'
 destination_path = f's3a://gavin-data-lake/nyc-tlc/trip-data/{dataset}-datacube/'
 
-years = range(2015, 2021)
+years = range(2016, 2021)
 months = range(1, 13)
 for year, month in itertools.product(years, months):
 
@@ -71,12 +71,7 @@ for year, month in itertools.product(years, months):
             payment_type,
 
             pickup_location_id,
-            dropoff_location_id
-
-            -- pickup_longitude
-            -- pickup_latitude
-            -- dropoff_longitude
-            -- dropoff_latitude
+            dropoff_location_id,
 
             total_amount
         FROM {dataset}
