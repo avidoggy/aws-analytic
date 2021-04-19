@@ -24,8 +24,12 @@ with Diagram("demo-diagram", show=True):
     with Cluster('ETL - Filter outliers'):
         etl = Glue('Glue Job')
         clear_data = S3('DataCube')
+        crawler = GlueCrawlers('Crawler')
+        catalog = GlueDataCatalog('DataCatalog')
+        engine = Athena('Athena')
         dashboard = Quicksight('Dashboard')
-    parquet_data >> etl >> clear_data >> dashboard
+    parquet_data >> etl >> clear_data
+    clear_data >> crawler >> catalog >> engine >> dashboard
 
     insight = Edge(label='Insight', style="dashed")
     eda >> insight >> etl
