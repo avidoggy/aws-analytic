@@ -1,4 +1,4 @@
-from diagrams import Diagram
+from diagrams import Cluster, Diagram, Edge
 from diagrams.aws.analytics import (Athena, GlueCrawlers, GlueDataCatalog, Quicksight, Glue,
                                     KinesisDataFirehose, KinesisDataStreams)
 from diagrams.aws.compute import Lambda
@@ -7,32 +7,25 @@ from diagrams.aws.general import MobileClient
 from diagrams.aws.database import Dynamodb
 # from diagrams.custom import Custom
 
-with Diagram("ride-hailing", show=True):
-    passengers = MobileClient("passengers")
-    drivers = MobileClient("drivers")
+with Diagram("demo-diagram", show=True):
 
-    collector = KinesisDataStreams("Collector with lambda")
+    with Cluster('ETL - csv to parquet with data-type fine tune'):
+        raw_data = S3('raw nyc-tlc-data')
+        elt = Glue('Glue Job')
+        parquet_data = S3('Parquet')
+        raw_data >> elt >> parquet_data
 
-    passengers >> collector
-    drivers >> collector
+    with Cluster('Exploratory Data Analysis'):
+        crawler = GlueCrawlers('Crawler')
+        catalog = GlueDataCatalog('DataCatalog')
+        eda = Athena('Athena')
+    parquet_data >> crawler >> catalog >> eda
 
-    # near real-time dashboard
-    processed = KinesisDataStreams("Processed Activities")
-    real_time_processor = Lambda("Time Series Processor")
-    time_series_data = Dynamodb("Time Series Data")
+    with Cluster('ETL - Filter outliers'):
+        etl = Glue('Glue Job')
+        clear_data = S3('DataCube')
+        dashboard = Quicksight('Dashboard')
+    parquet_data >> etl >> clear_data >> dashboard
 
-    collector >> processed >> real_time_processor >> time_series_data
-
-    # batch processing for trend analytics
-    firehose = KinesisDataFirehose("Batch Persistent")
-    data_lake = S3("DataLake")
-    crawler = GlueCrawlers("Crawlers")
-    catalog = GlueDataCatalog("Catalog")
-
-    collector >> firehose >> data_lake >> crawler >> catalog
-
-    # Dashboard
-    athena = Athena("Athena")
-    dashboard = Quicksight("Quicksight")
-
-    [time_series_data, catalog] >> athena >> dashboard
+    insight = Edge(label='Insight', style="dashed")
+    eda >> insight >> etl
