@@ -26,7 +26,7 @@ spark.conf.set("spark.sql.caseSensitive", "true")
 
 dataset = 'yellow'
 base_path = f's3a://gavin-data-lake/nyc-tlc/trip-data/{dataset}/'
-destination_path = f's3a://gavin-data-lake/nyc-tlc/trip-data/{dataset}-datamart/'
+destination_path = f's3a://gavin-data-lake/nyc-tlc/trip-data/{dataset}-datacube/'
 
 years = range(2015, 2021)
 months = range(1, 13)
@@ -37,11 +37,9 @@ for year, month in itertools.product(years, months):
 
     try:
         # Reading CSV but not infer schema
-        raw = spark.read.option(
-            'basePath', base_path
-        ).parquet(
-            path=source_path
-        ),
+        raw = spark.read\
+            .option('basePath', base_path)\
+            .parquet(source_path)
     except AnalysisException as e:
         # For handling path is not existed
         print('AnalysisException', e)
@@ -56,10 +54,10 @@ for year, month in itertools.product(years, months):
 
             CAST(vendor_name AS INT) AS vendor_name,
 
-            DAY_OF_WEEK(pickup_datetime) AS pickup_day_of_week,
+            DAYOFWEEK(pickup_datetime) AS pickup_day_of_week,
             HOUR(pickup_datetime) AS pickup_hour,
 
-            DAY_OF_WEEK(dropoff_datetime) AS dropoff_day_of_week,
+            DAYOFWEEK(dropoff_datetime) AS dropoff_day_of_week,
             HOUR(dropoff_datetime) AS dropoff_hour,
 
             passenger_count,
@@ -95,17 +93,16 @@ for year, month in itertools.product(years, months):
     df.printSchema()
 
     print(f'Writing to {destination_path}')
-    df.write.mode(
-        'append'
-    ).partitionBy(
-        'year', 'quarter', 'month', 'payment_type',
-    ).bucketBy(
-        100, 'trip_distance', 'trip_in_seconds', 'avg_speed_per_hour', 'total_amount',
-    ).sortBy(
-        'pickup_location_id', 'dropoff_location_id',
-    ).parquet(
-        path=destination_path,
-        compression='snappy',
-    )
+    df.write\
+        .format('parquet')\
+        .option("compression", "snappy")\
+        .mode('append')\
+        .partitionBy('year', 'quarter', 'month', 'payment_type',)\
+        .bucketBy(100, 'trip_distance', 'trip_in_seconds', 'avg_speed_per_hour', 'total_amount',)\
+        .sortBy('pickup_location_id', 'dropoff_location_id',)\
+        .saveAsTable(
+            'yellow-datacube',
+            path=destination_path,
+        )
 
 job.commit()
