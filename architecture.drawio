@@ -1,4 +1,4 @@
-<mxfile host="app.diagrams.net" modified="2021-04-19T10:07:36.612Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15" etag="gSUSKbsZ9PgOqY32C-Xn" version="14.5.3" type="github">
+<mxfile host="app.diagrams.net" modified="2021-04-19T10:08:17.037Z" agent="5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0.3 Safari/605.1.15" etag="rjF5VvA_6WIK4LB7MCc8" version="14.5.3" type="github">
   <diagram id="XrMNll2V08MRg5aVy4IJ" name="Page-1">
     <mxGraphModel dx="946" dy="620" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1169" pageHeight="827" math="0" shadow="0">
       <root>
@@ -10,8 +10,8 @@
         <mxCell id="lzE5lrEmT5vTGxUpPzfk-19" value="3. Data visualization" style="fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=0;verticalAlign=top;fontStyle=1;align=left;opacity=50;" vertex="1" parent="1">
           <mxGeometry x="1140" y="110" width="630" height="450" as="geometry" />
         </mxCell>
-        <mxCell id="lzE5lrEmT5vTGxUpPzfk-18" value="2. Batch data processing" style="fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=0;verticalAlign=top;fontStyle=1;align=left;opacity=50;" vertex="1" parent="1">
-          <mxGeometry x="829" y="249" width="180" height="190" as="geometry" />
+        <mxCell id="lzE5lrEmT5vTGxUpPzfk-18" value="2. Event-based data processing" style="fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=0;verticalAlign=top;fontStyle=1;align=left;opacity=50;" vertex="1" parent="1">
+          <mxGeometry x="823.5" y="249" width="191" height="190" as="geometry" />
         </mxCell>
         <mxCell id="lzE5lrEmT5vTGxUpPzfk-17" value="1. Streaming data collection" style="fillColor=#dae8fc;strokeColor=#6c8ebf;dashed=0;verticalAlign=top;fontStyle=1;align=left;opacity=50;" vertex="1" parent="1">
           <mxGeometry x="420" y="141" width="290" height="290" as="geometry" />
