@@ -26,7 +26,7 @@ spark.conf.set("spark.sql.caseSensitive", "true")
 
 dataset = 'yellow'
 base_path = f's3a://gavin-data-lake/nyc-tlc/trip-data/{dataset}/'
-destination_path = f's3a://gavin-data-lake/nyc-tlc/trip-data/{dataset}-datacube/'
+destination_path = f's3a://gavin-data-lake/nyc-tlc/trip-data/{dataset}_datacube/'
 
 years = range(2016, 2021)
 months = range(1, 13)
@@ -49,7 +49,6 @@ for year, month in itertools.product(years, months):
     df = spark.sql(f'''
         SELECT
             CAST(year AS INT) AS year,
-            QUARTER(pickup_datetime) AS quarter,
             CAST(month AS INT) AS month,
 
             CAST(vendor_name AS INT) AS vendor_name,
@@ -82,7 +81,6 @@ for year, month in itertools.product(years, months):
         AND (ratecode_id BETWEEN 1 AND 6)
         AND (payment_type BETWEEN 1 AND 6)
         AND (total_amount < 90)
-        AND store_and_forward_flag IS NOT NULL
     ''')
 
     df.printSchema()
@@ -92,11 +90,11 @@ for year, month in itertools.product(years, months):
         .format('parquet')\
         .option("compression", "snappy")\
         .mode('append')\
-        .partitionBy('year', 'quarter', 'month', 'payment_type',)\
-        .bucketBy(100, 'trip_distance', 'trip_in_seconds', 'avg_speed_per_hour', 'total_amount',)\
+        .partitionBy('year', 'month', 'payment_type',)\
+        .bucketBy(4, 'trip_distance', 'trip_in_seconds', 'avg_speed_per_hour', 'total_amount',)\
         .sortBy('pickup_location_id', 'dropoff_location_id',)\
         .saveAsTable(
-            'yellow-datacube',
+            'yellow_datacube',
             path=destination_path,
         )
 
