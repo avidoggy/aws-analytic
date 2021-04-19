@@ -1,11 +1,7 @@
 from diagrams import Cluster, Diagram, Edge
-from diagrams.aws.analytics import (Athena, GlueCrawlers, GlueDataCatalog, Quicksight, Glue,
-                                    KinesisDataFirehose, KinesisDataStreams)
-from diagrams.aws.compute import Lambda
+from diagrams.aws.analytics import (Athena, Glue, GlueCrawlers,
+                                    GlueDataCatalog, Quicksight)
 from diagrams.aws.storage import S3
-from diagrams.aws.general import MobileClient
-from diagrams.aws.database import Dynamodb
-# from diagrams.custom import Custom
 
 with Diagram("demo-diagram", show=True):
 
